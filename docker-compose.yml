@@ -1,0 +1,65 @@
+version: "3"
+services:
+  api-strapi:
+    container_name: api-strapi
+    build:
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PORT: ${DATABASE_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      NODE_ENV: development
+    volumes:
+      - ./_docker_volumes/public/uploads:/opt/app/public/uploads
+      - ./config:/opt/app/config
+      - ./src:/opt/app/src
+      - ./package.json:/opt/package.json
+      - ./yarn.lock:/opt/yarn.lock
+    ports:
+      - "1337:1337"
+    depends_on:
+      - db-app-postgres
+
+  db-app-postgres:
+    image: postgres
+    container_name: db-app-postgres
+    platform: linux/amd64
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - ./_docker_volumes/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    # networks:
+    #   - postgres
+
+  # db-app-pgadmin:
+  #   image: dpage/pgadmin4
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL:  ${PGADMIN_DEFAULT_EMAIL}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+  #     PGADMIN_CONFIG_SERVER_MODE: 'False'
+  #   volumes:
+  #     - pgadmin:/var/lib/pgadmin
+  #   ports:
+  #     - "${DATABASE_PORT:-5050}:80"
+  #   networks:
+  #     - postgres
+  #   restart: unless-stopped
+
+networks:
+  postgres:
+    driver: bridge
+    
+# volumes:
+#   pgadmin:
